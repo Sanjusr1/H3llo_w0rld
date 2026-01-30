@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Learning System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            min-height: 100px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Adaptive Learning System</h1>
+        <p>Enter your reading behavior, facial expressions, and the content to analyze for personalized learning adaptation.</p>
+
+        <form id="analysisForm">
+            <div class="form-group">
+                <label for="readingTime">Reading Time (seconds):</label>
+                <input type="number" id="readingTime" value="120" required>
+            </div>
+
+            <div class="form-group">
+                <label for="pauseTime">Pause Time (seconds):</label>
+                <input type="number" id="pauseTime" value="5" required>
+            </div>
+
+            <div class="form-group">
+                <label for="rereads">Number of Rereads:</label>
+                <input type="number" id="rereads" value="2" required>
+            </div>
+
+            <div class="form-group">
+                <label for="blinkRate">Blink Rate (per minute):</label>
+                <input type="number" id="blinkRate" value="25" required>
+            </div>
+
+            <div class="form-group">
+                <label for="eyebrowMovements">Eyebrow Movements (per minute):</label>
+                <input type="number" id="eyebrowMovements" value="15" required>
+            </div>
+
+            <div class="form-group">
+                <label for="headMovements">Head Movements (per minute):</label>
+                <input type="number" id="headMovements" value="8" required>
+            </div>
+
+            <div class="form-group">
+                <label for="content">Learning Content:</label>
+                <textarea id="content" placeholder="Enter the text or concept to learn..." required>Machine learning is a method of data analysis that automates analytical model building.</textarea>
+            </div>
+
+            <button type="submit" id="submitBtn">
+                <span id="btnText">Analyze & Adapt</span>
+                <span id="loadingSpinner" class="loading" style="display: none;"></span>
+            </button>
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('analysisForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const resultDiv = document.getElementById('result');
+
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.textContent = 'Analyzing...';
+            loadingSpinner.style.display = 'inline-block';
+            resultDiv.style.display = 'none';
+
+            // Collect form data
+            const data = {
+                behavior: {
+                    reading_time: parseInt(document.getElementById('readingTime').value),
+                    pause_time: parseInt(document.getElementById('pauseTime').value),
+                    rereads: parseInt(document.getElementById('rereads').value)
+                },
+                face: {
+                    blink_rate: parseInt(document.getElementById('blinkRate').value),
+                    eyebrow_movements: parseInt(document.getElementById('eyebrowMovements').value),
+                    head_movements: parseInt(document.getElementById('headMovements').value)
+                },
+                content: document.getElementById('content').value
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:8003/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // Display result
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h3>Analysis Complete!</h3>
+                    <p><strong>Cognitive Load:</strong> ${result.cognitive_load}</p>
+                    <p><strong>Temperature:</strong> ${result.temperature}</p>
+                    <p><strong>Pace:</strong> ${result.pace}</p>
+                    <h4>Adapted Script:</h4>
+                    <p>${result.script.replace(/\n/g, '<br>')}</p>
+                    <h4>Visual Scenes:</h4>
+                    <p>${result.scenes.replace(/\n/g, '<br>')}</p>
+                `;
+                resultDiv.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<p><strong>Error:</strong> ${error.message}. Make sure the backend server is running on port 8003.</p>`;
+                resultDiv.style.display = 'block';
+            } finally {
+                // Reset loading state
+                submitBtn.disabled = false;
+                btnText.textContent = 'Analyze & Adapt';
+                loadingSpinner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
